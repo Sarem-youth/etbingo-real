@@ -13,6 +13,17 @@ const registerSchema = z.object({
 
 export async function POST(req: NextRequest) {
   try {
+    // Check if database is available
+    try {
+      await db.$queryRaw`SELECT 1`;
+    } catch (dbError) {
+      console.error('Database connection error:', dbError);
+      return NextResponse.json(
+        { error: 'Database connection failed. Please try again later.' },
+        { status: 503 }
+      );
+    }
+
     const body = await req.json();
     const { phoneNumber, password, name, email } = registerSchema.parse(body);
 
