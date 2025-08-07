@@ -6,5 +6,10 @@
     "app/**/*": {
       "maxDuration": 30
     }
+  },
+  "env": {
+    "DATABASE_URL": "postgresql://piassanw_Sarem:@Mahete1231@piassabet.com/piassanw_etbingo",
+    "JWT_SECRET": "977bfb67ce6693b32eca74aaf30aef94",
+    "NODE_ENV": "production"
   }
 }
