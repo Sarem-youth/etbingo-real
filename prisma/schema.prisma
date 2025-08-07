@@ -1,0 +1,223 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// User roles enum
+enum UserRole {
+  PLAYER
+  FINANCE_ADMIN
+  GAME_MASTER
+  SUPPORT_AGENT
+  SUPER_ADMIN
+}
+
+// Transaction types enum
+enum TransactionType {
+  DEPOSIT
+  WITHDRAWAL
+  GAME_BET
+  WINNING
+  BONUS
+}
+
+// Transaction status enum
+enum TransactionStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+// Game status enum
+enum GameStatus {
+  WAITING
+  PLAYING
+  COMPLETED
+  CANCELLED
+}
+
+// Card status enum
+enum CardStatus {
+  AVAILABLE
+  SELECTED
+  PLAYING
+  COMPLETED
+}
+
+// User model for players
+model User {
+  id              String   @id @default(cuid())
+  phoneNumber     String   @unique
+  email           String?  @unique
+  name            String?
+  password        String
+  role            UserRole @default(PLAYER)
+  isActive        Boolean  @default(true)
+  balance         Float    @default(0) // Main balance
+  bonusBalance    Float    @default(0) // Bonus balance
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  // Relations
+  transactions    Transaction[]
+  gameSessions    GameSession[]
+  selectedCards   SelectedCard[]
+  
+  @@map("users")
+}
+
+// Admin users for the admin panel
+model AdminUser {
+  id        String   @id @default(cuid())
+  username  String   @unique
+  email     String   @unique
+  password  String
+  role      UserRole
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@map("admin_users")
+}
+
+// Stake levels for betting
+model StakeLevel {
+  id          String  @id @default(cuid())
+  amount      Float   // ETB amount
+  isActive    Boolean @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  gameSessions GameSession[]
+  
+  @@map("stake_levels")
+}
+
+// Bingo games
+model Game {
+  id          String     @id @default(cuid())
+  name        String
+  status      GameStatus @default(WAITING)
+  startTime   DateTime?
+  endTime     DateTime?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  
+  // Relations
+  sessions    GameSession[]
+  calledNumbers CalledNumber[]
+  
+  @@map("games")
+}
+
+// Individual game sessions
+model GameSession {
+  id           String   @id @default(cuid())
+  gameId       String
+  stakeLevelId String
+  userId       String
+  status       GameStatus @default(WAITING)
+  startTime    DateTime?
+  endTime      DateTime?
+  totalWinnings Float    @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  // Relations
+  game         Game         @relation(fields: [gameId], references: [id])
+  stakeLevel   StakeLevel   @relation(fields: [stakeLevelId], references: [id])
+  user         User         @relation(fields: [userId], references: [id])
+  selectedCards SelectedCard[]
+  
+  @@map("game_sessions")
+}
+
+// Bingo cards (cartelas)
+model BingoCard {
+  id        String      @id @default(cuid())
+  cardNumber Int         // Unique card number
+  numbers   String      // JSON string of 5x5 grid numbers
+  pattern   String?     // Winning pattern if any
+  status    CardStatus  @default(AVAILABLE)
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  
+  // Relations
+  selectedCards SelectedCard[]
+  
+  @@unique([cardNumber])
+  @@map("bingo_cards")
+}
+
+// Cards selected by users for a game session
+model SelectedCard {
+  id          String   @id @default(cuid())
+  gameSessionId String
+  cardId      String
+  userId      String
+  isDaubed    String   // JSON string of daubed positions
+  isWinner    Boolean  @default(false)
+  winAmount   Float    @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  gameSession GameSession @relation(fields: [gameSessionId], references: [id])
+  card        BingoCard   @relation(fields: [cardId], references: [id])
+  user        User        @relation(fields: [userId], references: [id])
+  
+  @@map("selected_cards")
+}
+
+// Numbers called during a game
+model CalledNumber {
+  id        String   @id @default(cuid())
+  gameId    String
+  number    Int
+  callTime  DateTime @default(now())
+  
+  // Relations
+  game      Game     @relation(fields: [gameId], references: [id])
+  
+  @@unique([gameId, number])
+  @@map("called_numbers")
+}
+
+// Financial transactions
+model Transaction {
+  id          String           @id @default(cuid())
+  userId      String
+  type        TransactionType
+  amount      Float
+  status      TransactionStatus @default(PENDING)
+  reference   String?          // External reference for deposits/withdrawals
+  description String?
+  metadata    String?          // JSON string for additional data
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  
+  // Relations
+  user        User             @relation(fields: [userId], references: [id])
+  
+  @@map("transactions")
+}
+
+// System settings
+model SystemSetting {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@map("system_settings")
+}
