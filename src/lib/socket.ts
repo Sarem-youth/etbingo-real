@@ -506,34 +506,7 @@ const getBingoLetter = (number: number): string => {
   return 'O';
 };
 
-// Check for winners in the room
-const checkForWinners = (roomId: string, io: Server, calledNumbers: number[]) => {
-  const room = activeRooms.get(roomId);
-  if (!room) return;
 
-  // For now, we'll simulate winner checking
-  // In a real implementation, this would check actual bingo patterns
-  const usersWithCartelas = Object.keys(room.confirmedCartelas);
-  
-  // Simulate random winner for demo purposes
-  if (calledNumbers.length >= 15 && usersWithCartelas.length > 0 && Math.random() < 0.1) {
-    const winnerIndex = Math.floor(Math.random() * usersWithCartelas.length);
-    const winnerId = usersWithCartelas[winnerIndex];
-    
-    // End the game with a winner
-    clearInterval(getActiveTimer(roomId));
-    
-    io.to(`room:${roomId}`).emit('game-end', {
-      roomId: roomId,
-      winnerId: winnerId,
-      winnerName: `Player ${winnerId.slice(0, 8)}`
-    });
-
-    // Update room status
-    room.status = 'finished';
-    activeRooms.set(roomId, room);
-  }
-};
 
 // Helper function to get active timer
 const getActiveTimer = (roomId: string): NodeJS.Timeout | undefined => {
