@@ -51,6 +51,7 @@
     "@tanstack/react-table": "^8.21.3",
     "@types/bcryptjs": "^2.4.6",
     "@types/jsonwebtoken": "^9.0.10",
+    "@tailwindcss/postcss": "^4",
     "autoprefixer": "^10.4.20",
     "axios": "^1.10.0",
     "bcryptjs": "^3.0.2",
@@ -91,7 +92,6 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
-    "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
